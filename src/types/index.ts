@@ -301,6 +301,8 @@ export interface AnalysisResult {
   decisionReason:         string[];
   /** Contradiction pattern labels that fired during classification. */
   contradictions:         string[];
+  /** Whether each scored type passed its structural eligibility check. */
+  eligibility:            Partial<Record<EmailType, boolean>>;
   detectedIssues:         string[];
   failureModes:           string[];
   agentInterpretation:    AgentInterpretation;

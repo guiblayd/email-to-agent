@@ -1,3 +1,5 @@
+import { Tooltip } from './Tooltip';
+
 interface ScoreRingProps {
   score: number;
   size?: number;
@@ -61,9 +63,11 @@ export function ScoreRing({ score, size = 128, animated = true }: ScoreRingProps
         </div>
       </div>
 
-      <span className="text-xs text-zinc-500 uppercase tracking-widest font-medium" style={{ fontSize: `${Math.max(9, size * 0.075).toFixed(0)}px` }}>
-        Agent Readiness Score
-      </span>
+      <Tooltip text="How easy it is for an AI agent to understand and classify this email.">
+        <span className="text-xs text-zinc-500 uppercase tracking-widest font-medium" style={{ fontSize: `${Math.max(9, size * 0.075).toFixed(0)}px` }}>
+          Agent Readiness Score
+        </span>
+      </Tooltip>
     </div>
   );
 }

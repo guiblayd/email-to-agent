@@ -63,6 +63,11 @@ textarea {
   to { opacity: 1; }
 }
 
+@keyframes tooltipIn {
+  from { opacity: 0; transform: translate(-50%, calc(-100% - 6px)); }
+  to   { opacity: 1; transform: translate(-50%, -100%); }
+}
+
 @keyframes scoreIn {
   0%   { opacity: 0; transform: scale(0.85); }
   60%  { transform: scale(1.04); }

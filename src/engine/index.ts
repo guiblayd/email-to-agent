@@ -67,6 +67,7 @@ export async function analyzeEmail(text: string, htmlSource?: string): Promise<A
     strongestEvidence:      classified.strongestEvidence,
     decisionReason:         classified.decisionReason,
     contradictions:         classified.contradictions,
+    eligibility:            classified.eligibility,
     detectedIssues:         [...issues, ...classified.classificationNotes],
     failureModes,
     agentInterpretation,

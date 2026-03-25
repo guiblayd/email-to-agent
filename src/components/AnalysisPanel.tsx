@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import type { AnalysisResult, EmailType, Priority, Urgency, Language, EmailIntent, Availability, UserProfile, Sensitivity, ExternalDependency, InputFidelity } from '../types';
+import { Tooltip } from './Tooltip';
 import { ScoreRing } from './ScoreRing';
 import { ScoreBreakdownPanel } from './ScoreBreakdownPanel';
 import { JsonViewer } from './JsonViewer';
@@ -196,10 +197,12 @@ function SafeActionBar({ score }: { score: number }) {
   return (
     <div className="flex flex-col gap-1.5">
       <div className="flex items-center justify-between">
-        <span className="text-xs font-semibold uppercase tracking-widest"
-              style={{ color: 'rgba(255,255,255,0.3)' }}>
-          Safe Action Score
-        </span>
+        <Tooltip text="How safely an agent could act on this email without opening external links or attachments.">
+          <span className="text-xs font-semibold uppercase tracking-widest"
+                style={{ color: 'rgba(255,255,255,0.3)' }}>
+            Safe Action Score
+          </span>
+        </Tooltip>
         <div className="flex items-center gap-2">
           <span className="text-xs font-medium" style={{ color }}>{label}</span>
           <span className="text-sm font-bold tabular-nums" style={{ color }}>{score}</span>
@@ -257,30 +260,40 @@ function ClassificationMeta({ result }: { result: AnalysisResult }) {
       {/* Type + confidence */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <span className="text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>Type</span>
+          <Tooltip text="The main category the engine assigned to this email.">
+            <span className="text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>Type</span>
+          </Tooltip>
           <span className="text-xs font-semibold px-2 py-0.5 rounded"
                 style={{ background: typeMeta.bg, color: typeMeta.color }}>
             {typeMeta.label}
           </span>
           {result.subtype && (
-            <span className="text-xs font-mono" style={{ color: 'rgba(255,255,255,0.3)' }}>
-              · {result.subtype}
-            </span>
+            <Tooltip text="A more specific classification within the detected type.">
+              <span className="text-xs font-mono" style={{ color: 'rgba(255,255,255,0.3)' }}>
+                · {result.subtype}
+              </span>
+            </Tooltip>
           )}
         </div>
-        <span className="text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>Confidence</span>
+        <Tooltip text="How certain the engine is about the current classification.">
+          <span className="text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>Confidence</span>
+        </Tooltip>
       </div>
       <ConfidenceBar value={result.confidence} />
 
       {/* Availability + Intent */}
       <div className="flex items-center gap-2 flex-wrap">
-        <span className="text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>Availability</span>
+        <Tooltip text="Whether this email refers to something scheduled, ongoing, or available on demand.">
+          <span className="text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>Availability</span>
+        </Tooltip>
         <span className="text-xs font-medium px-2 py-0.5 rounded-full"
               style={{ background: AVAILABILITY_META[result.availability].bg, color: AVAILABILITY_META[result.availability].color }}>
           {AVAILABILITY_META[result.availability].label}
         </span>
         <span className="text-xs" style={{ color: 'rgba(255,255,255,0.15)' }}>·</span>
-        <span className="text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>Intent</span>
+        <Tooltip text="The action this email appears to request or encourage.">
+          <span className="text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>Intent</span>
+        </Tooltip>
         <span className="text-xs font-medium px-2 py-0.5 rounded-full"
               style={{ background: 'rgba(255,255,255,0.06)', color: intentMeta.color }}>
           {intentMeta.icon} {intentMeta.label}
@@ -294,7 +307,9 @@ function ClassificationMeta({ result }: { result: AnalysisResult }) {
             const sm = SENSITIVITY_META[result.sensitivity];
             return (
               <>
-                <span className="text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>Sensitivity</span>
+                <Tooltip text="How serious or sensitive this email appears to be if ignored.">
+                  <span className="text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>Sensitivity</span>
+                </Tooltip>
                 <span className="text-xs font-medium px-2 py-0.5 rounded-full"
                       style={{ background: sm.bg, color: sm.color }}>
                   {sm.label}
@@ -309,7 +324,9 @@ function ClassificationMeta({ result }: { result: AnalysisResult }) {
             const em = EXT_DEP_META[result.externalDependency!];
             return (
               <>
-                <span className="text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>Dependency</span>
+                <Tooltip text="Whether this email depends on links or attachments to be fully useful.">
+                  <span className="text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>Dependency</span>
+                </Tooltip>
                 <span className="text-xs font-medium px-2 py-0.5 rounded-full"
                       style={{ background: em.bg, color: em.color }}>
                   {em.label}
@@ -323,7 +340,9 @@ function ClassificationMeta({ result }: { result: AnalysisResult }) {
       {/* Priority score breakdown */}
       <div style={{ height: 1, background: 'rgba(255,255,255,0.05)' }} />
       <div className="flex items-center gap-3 flex-wrap">
-        <span className="text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>Priority score</span>
+        <Tooltip text="How likely an agent would treat this email as important.">
+          <span className="text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>Priority score</span>
+        </Tooltip>
         <div className="flex items-center gap-1.5 text-xs font-mono">
           <span style={{ color: 'rgba(255,255,255,0.5)' }}>{result.intrinsicScore}</span>
           <span style={{ color: 'rgba(255,255,255,0.2)' }}>intrinsic</span>
@@ -558,7 +577,11 @@ function AgentFailureMode({ modes }: { modes: string[] }) {
   if (modes.length === 0) return null;
   return (
     <div>
-      <SectionLabel>Agent Failure Mode</SectionLabel>
+      <SectionLabel>
+        <Tooltip text="What a cautious agent would likely fail to do with this email.">
+          Agent Failure Mode
+        </Tooltip>
+      </SectionLabel>
       <div className="rounded-xl p-4 flex flex-col gap-2.5"
            style={{ background: 'rgba(239,68,68,0.04)', border: '1px solid rgba(239,68,68,0.12)' }}>
         <p className="text-xs mb-0.5" style={{ color: 'rgba(239,68,68,0.6)' }}>
@@ -632,8 +655,9 @@ function ReasoningTrace({ entries }: { entries: AnalysisResult['reasoning'] }) {
 // ─── Classification decision section ─────────────────────────────────────────
 
 function ClassificationDecision({ result }: { result: AnalysisResult }) {
-  const { strongestEvidence, decisionReason, contradictions } = result;
+  const { strongestEvidence, decisionReason, contradictions, eligibility } = result;
   if (decisionReason.length === 0 && strongestEvidence.length === 0) return null;
+  const eligibilityEntries = Object.entries(eligibility ?? {}) as [EmailType, boolean][];
 
   return (
     <>
@@ -675,11 +699,32 @@ function ClassificationDecision({ result }: { result: AnalysisResult }) {
         {contradictions.length > 0 && (
           <div className="px-4 py-2.5 flex flex-wrap gap-1.5"
                style={{ borderTop: '1px solid rgba(255,255,255,0.05)', background: 'rgba(239,68,68,0.03)' }}>
-            <span className="text-xs mr-1" style={{ color: 'rgba(244,63,94,0.5)' }}>Contradictions:</span>
+            <Tooltip text="Signals in the email that point to conflicting interpretations.">
+              <span className="text-xs mr-1" style={{ color: 'rgba(244,63,94,0.5)' }}>Contradictions:</span>
+            </Tooltip>
             {contradictions.map((c, i) => (
               <span key={i} className="text-xs font-mono px-2 py-0.5 rounded"
                     style={{ background: 'rgba(244,63,94,0.08)', color: '#f87171' }}>
                 {c}
+              </span>
+            ))}
+          </div>
+        )}
+
+        {/* Eligibility (if any scored types) */}
+        {eligibilityEntries.length > 0 && (
+          <div className="px-4 py-2.5 flex flex-wrap items-center gap-1.5"
+               style={{ borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+            <Tooltip text="Whether the email meets the minimum structural requirements for a given classification.">
+              <span className="text-xs mr-1" style={{ color: 'rgba(255,255,255,0.25)' }}>Eligibility:</span>
+            </Tooltip>
+            {eligibilityEntries.map(([type, passed]) => (
+              <span key={type} className="text-xs font-mono px-2 py-0.5 rounded"
+                    style={{
+                      background: passed ? 'rgba(52,211,153,0.08)' : 'rgba(244,63,94,0.06)',
+                      color:      passed ? 'rgba(52,211,153,0.65)' : 'rgba(244,63,94,0.4)',
+                    }}>
+                {passed ? '✓' : '✕'} {type}
               </span>
             ))}
           </div>
@@ -748,9 +793,11 @@ function ProfileAnalysisSection({ result }: { result: AnalysisResult }) {
           <span className="text-base">{bestMeta.icon}</span>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-xs font-semibold" style={{ color: bestMeta.color }}>
-                Best match: {bestMeta.label}
-              </span>
+              <Tooltip text="The user profile this email seems most relevant to.">
+                <span className="text-xs font-semibold" style={{ color: bestMeta.color }}>
+                  Best match: {bestMeta.label}
+                </span>
+              </Tooltip>
               <span className="text-xs px-2 py-0.5 rounded-full font-mono"
                     style={{ background: `${bestMeta.color}1a`, color: bestMeta.color }}>
                 {profileAnalysis.profileRelevance[best]} pts
@@ -825,10 +872,12 @@ function ResultView({ result }: { result: AnalysisResult }) {
       <Section delay={0}>
         <div className="flex items-start justify-between gap-4">
           <div className="flex flex-col gap-3 pt-1 flex-1">
-            <p className="text-xs font-semibold uppercase tracking-widest"
-               style={{ color: 'rgba(255,255,255,0.3)' }}>
-              Detected Type
-            </p>
+            <Tooltip text="The main category the engine assigned to this email.">
+              <p className="text-xs font-semibold uppercase tracking-widest"
+                 style={{ color: 'rgba(255,255,255,0.3)' }}>
+                Detected Type
+              </p>
+            </Tooltip>
             <ClassificationMeta result={result} />
             <div className="flex flex-wrap gap-2">
               <span className="text-xs font-medium px-2.5 py-1 rounded-full"
@@ -837,11 +886,12 @@ function ResultView({ result }: { result: AnalysisResult }) {
               </span>
               <Badge {...priorityMeta} label={`${priorityMeta.label} priority`} />
               <Badge {...urgencyMeta} />
-              <span className="text-xs font-medium px-2.5 py-1 rounded-full"
-                    title={FIDELITY_META[result.inputFidelity].title}
-                    style={{ background: FIDELITY_META[result.inputFidelity].bg, color: FIDELITY_META[result.inputFidelity].color }}>
-                {FIDELITY_META[result.inputFidelity].label}
-              </span>
+              <Tooltip text="How much of the original email structure was preserved in the pasted input.">
+                <span className="text-xs font-medium px-2.5 py-1 rounded-full"
+                      style={{ background: FIDELITY_META[result.inputFidelity].bg, color: FIDELITY_META[result.inputFidelity].color }}>
+                  {FIDELITY_META[result.inputFidelity].label}
+                </span>
+              </Tooltip>
             </div>
           </div>
           <ScoreRing score={result.agentReadinessScore} />
