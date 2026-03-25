@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { AnalysisResult, EmailType, Priority, Urgency, Language, Intent, EmailSubtype, Availability } from '../types';
+import type { AnalysisResult, EmailType, Priority, Urgency, Language, EmailIntent, Availability, UserProfile, Sensitivity, ExternalDependency } from '../types';
 import { ScoreRing } from './ScoreRing';
 import { ScoreBreakdownPanel } from './ScoreBreakdownPanel';
 import { JsonViewer } from './JsonViewer';
@@ -56,16 +56,20 @@ function LoadingState() {
 // ─── Metadata maps ─────────────────────────────────────────────────────────────
 
 const TYPE_META: Record<EmailType, { label: string; color: string; bg: string }> = {
-  event:         { label: 'Event',         color: '#a78bfa', bg: 'rgba(167,139,250,0.12)' },
-  course:        { label: 'Course',        color: '#38bdf8', bg: 'rgba(56,189,248,0.12)' },
-  content:       { label: 'Content',       color: '#f472b6', bg: 'rgba(244,114,182,0.12)' },
-  promotion:     { label: 'Promotion',     color: '#fb923c', bg: 'rgba(251,146,60,0.12)' },
-  newsletter:    { label: 'Newsletter',    color: '#60a5fa', bg: 'rgba(96,165,250,0.12)' },
-  billing:       { label: 'Billing',       color: '#f43f5e', bg: 'rgba(244,63,94,0.12)' },
-  alert:         { label: 'Alert',         color: '#ef4444', bg: 'rgba(239,68,68,0.15)' },
-  transaction:   { label: 'Transaction',   color: '#34d399', bg: 'rgba(52,211,153,0.12)' },
-  informational: { label: 'Informational', color: '#94a3b8', bg: 'rgba(148,163,184,0.12)' },
-  unknown:       { label: 'Unknown',       color: '#6b7280', bg: 'rgba(107,114,128,0.12)' },
+  event:       { label: 'Event',       color: '#a78bfa', bg: 'rgba(167,139,250,0.12)' },
+  course:      { label: 'Course',      color: '#38bdf8', bg: 'rgba(56,189,248,0.12)'  },
+  content:     { label: 'Content',     color: '#f472b6', bg: 'rgba(244,114,182,0.12)' },
+  promotion:   { label: 'Promotion',   color: '#fb923c', bg: 'rgba(251,146,60,0.12)'  },
+  newsletter:  { label: 'Newsletter',  color: '#60a5fa', bg: 'rgba(96,165,250,0.12)'  },
+  billing:     { label: 'Billing',     color: '#f43f5e', bg: 'rgba(244,63,94,0.12)'   },
+  alert:       { label: 'Alert',       color: '#ef4444', bg: 'rgba(239,68,68,0.15)'   },
+  transaction: { label: 'Transaction', color: '#34d399', bg: 'rgba(52,211,153,0.12)'  },
+  account:     { label: 'Account',     color: '#fbbf24', bg: 'rgba(251,191,36,0.12)'  },
+  support:     { label: 'Support',     color: '#6ee7b7', bg: 'rgba(110,231,183,0.12)' },
+  community:   { label: 'Community',   color: '#818cf8', bg: 'rgba(129,140,248,0.12)' },
+  job:         { label: 'Job',         color: '#67e8f9', bg: 'rgba(103,232,249,0.12)' },
+  legal:       { label: 'Legal',       color: '#d1fae5', bg: 'rgba(209,250,229,0.08)' },
+  unknown:     { label: 'Unknown',     color: '#6b7280', bg: 'rgba(107,114,128,0.12)' },
 };
 
 const PRIORITY_META: Record<Priority, { label: string; color: string; bg: string }> = {
@@ -88,20 +92,42 @@ const LANGUAGE_META: Record<Language, { label: string; flag: string; color: stri
 };
 
 const AVAILABILITY_META: Record<Availability, { label: string; color: string; bg: string }> = {
-  scheduled: { label: 'Scheduled',  color: '#a78bfa', bg: 'rgba(167,139,250,0.1)' },
-  on_demand: { label: 'On-demand',  color: '#38bdf8', bg: 'rgba(56,189,248,0.1)'  },
+  scheduled: { label: 'Scheduled', color: '#a78bfa', bg: 'rgba(167,139,250,0.1)' },
+  on_demand: { label: 'On-demand', color: '#38bdf8', bg: 'rgba(56,189,248,0.1)'  },
+  ongoing:   { label: 'Ongoing',   color: '#34d399', bg: 'rgba(52,211,153,0.1)'  },
+  none:      { label: 'N/A',       color: '#6b7280', bg: 'rgba(107,114,128,0.1)' },
 };
 
-const INTENT_META: Record<Intent, { label: string; icon: string; color: string }> = {
-  invite:  { label: 'Invite',   icon: '📩', color: '#a78bfa' },
-  sell:    { label: 'Sell',     icon: '🛒', color: '#fb923c' },
-  remind:  { label: 'Remind',   icon: '🔔', color: '#f59e0b' },
-  charge:  { label: 'Charge',   icon: '💳', color: '#f43f5e' },
-  inform:  { label: 'Inform',   icon: 'ℹ️', color: '#60a5fa' },
-  warn:    { label: 'Warn',     icon: '⚠️', color: '#ef4444' },
-  confirm: { label: 'Confirm',  icon: '✅', color: '#34d399' },
-  educate: { label: 'Educate',  icon: '📚', color: '#38bdf8' },
-  unknown: { label: 'Unknown',  icon: '❓', color: '#6b7280' },
+const SENSITIVITY_META: Record<Sensitivity, { label: string; color: string; bg: string }> = {
+  low:      { label: 'Low sensitivity',      color: '#6b7280', bg: 'rgba(107,114,128,0.12)' },
+  medium:   { label: 'Medium sensitivity',   color: '#f59e0b', bg: 'rgba(245,158,11,0.12)'  },
+  high:     { label: 'High sensitivity',     color: '#f97316', bg: 'rgba(249,115,22,0.12)'  },
+  critical: { label: 'Critical sensitivity', color: '#ef4444', bg: 'rgba(239,68,68,0.15)'   },
+};
+
+const EXT_DEP_META: Record<ExternalDependency, { label: string; color: string; bg: string }> = {
+  none:                { label: 'Self-contained',       color: '#34d399', bg: 'rgba(52,211,153,0.1)'   },
+  link_optional:       { label: 'Link optional',        color: '#60a5fa', bg: 'rgba(96,165,250,0.1)'   },
+  link_required:       { label: 'Link required',        color: '#fb923c', bg: 'rgba(251,146,60,0.12)'  },
+  attachment_optional: { label: 'Attachment optional',  color: '#818cf8', bg: 'rgba(129,140,248,0.1)'  },
+  attachment_required: { label: 'Attachment required',  color: '#a78bfa', bg: 'rgba(167,139,250,0.12)' },
+};
+
+const INTENT_META: Record<EmailIntent, { label: string; icon: string; color: string }> = {
+  read:     { label: 'Read',     icon: '📖', color: '#60a5fa' },
+  watch:    { label: 'Watch',    icon: '▶️', color: '#f472b6' },
+  attend:   { label: 'Attend',   icon: '📅', color: '#a78bfa' },
+  register: { label: 'Register', icon: '📝', color: '#38bdf8' },
+  pay:      { label: 'Pay',      icon: '💳', color: '#f43f5e' },
+  review:   { label: 'Review',   icon: '🔍', color: '#fb923c' },
+  confirm:  { label: 'Confirm',  icon: '✅', color: '#34d399' },
+  reply:    { label: 'Reply',    icon: '↩️', color: '#6ee7b7' },
+  download: { label: 'Download', icon: '⬇️', color: '#818cf8' },
+  verify:   { label: 'Verify',   icon: '🔐', color: '#fbbf24' },
+  resolve:     { label: 'Resolve',     icon: '🔧', color: '#67e8f9' },
+  track:       { label: 'Track',       icon: '📦', color: '#38bdf8' },
+  acknowledge: { label: 'Acknowledge', icon: '👁', color: '#94a3b8' },
+  ignore:      { label: 'Ignore',      icon: '🚫', color: '#6b7280' },
 };
 
 // ─── Shared primitives ────────────────────────────────────────────────────────
@@ -255,6 +281,60 @@ function ClassificationMeta({ result }: { result: AnalysisResult }) {
         </span>
       </div>
 
+      {/* Sensitivity + External dependency */}
+      {(result.sensitivity || result.externalDependency) && (
+        <div className="flex items-center gap-2 flex-wrap">
+          {result.sensitivity && (() => {
+            const sm = SENSITIVITY_META[result.sensitivity];
+            return (
+              <>
+                <span className="text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>Sensitivity</span>
+                <span className="text-xs font-medium px-2 py-0.5 rounded-full"
+                      style={{ background: sm.bg, color: sm.color }}>
+                  {sm.label}
+                </span>
+              </>
+            );
+          })()}
+          {result.sensitivity && result.externalDependency && (
+            <span className="text-xs" style={{ color: 'rgba(255,255,255,0.15)' }}>·</span>
+          )}
+          {result.externalDependency && (() => {
+            const em = EXT_DEP_META[result.externalDependency!];
+            return (
+              <>
+                <span className="text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>Dependency</span>
+                <span className="text-xs font-medium px-2 py-0.5 rounded-full"
+                      style={{ background: em.bg, color: em.color }}>
+                  {em.label}
+                </span>
+              </>
+            );
+          })()}
+        </div>
+      )}
+
+      {/* Priority score breakdown */}
+      <div style={{ height: 1, background: 'rgba(255,255,255,0.05)' }} />
+      <div className="flex items-center gap-3 flex-wrap">
+        <span className="text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>Priority score</span>
+        <div className="flex items-center gap-1.5 text-xs font-mono">
+          <span style={{ color: 'rgba(255,255,255,0.5)' }}>{result.intrinsicScore}</span>
+          <span style={{ color: 'rgba(255,255,255,0.2)' }}>intrinsic</span>
+          {result.relevanceScore > 0 && (
+            <>
+              <span style={{ color: 'rgba(255,255,255,0.2)' }}>+</span>
+              <span style={{ color: '#a78bfa' }}>{result.relevanceScore}</span>
+              <span style={{ color: 'rgba(255,255,255,0.2)' }}>relevance</span>
+              <span style={{ color: 'rgba(255,255,255,0.2)' }}>=</span>
+            </>
+          )}
+          <span className="font-bold" style={{ color: result.priorityScore >= 80 ? '#ef4444' : result.priorityScore >= 60 ? '#f97316' : result.priorityScore >= 40 ? '#f59e0b' : '#6b7280' }}>
+            {result.priorityScore}
+          </span>
+        </div>
+      </div>
+
       {/* Alternatives */}
       {result.alternatives.length > 0 && (
         <div className="flex items-center gap-2 flex-wrap">
@@ -372,6 +452,51 @@ function DetectedDataSection({ result }: { result: AnalysisResult }) {
   );
 }
 
+// ─── Link dependency warning ──────────────────────────────────────────────────
+
+function LinkDependencyWarning() {
+  return (
+    <div className="rounded-xl px-4 py-3 flex items-start gap-3"
+         style={{ background: 'rgba(249,115,22,0.08)', border: '1px solid rgba(249,115,22,0.2)' }}>
+      <span className="text-sm flex-shrink-0" style={{ color: '#fb923c' }}>⚠</span>
+      <div>
+        <p className="text-xs font-semibold mb-0.5" style={{ color: '#fb923c' }}>
+          Link dependency detected
+        </p>
+        <p className="text-xs leading-relaxed" style={{ color: 'rgba(251,146,60,0.7)' }}>
+          This email depends on an external link to deliver its core value.
+          A cautious agent may refuse to act without human approval.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+// ─── Agent failure mode section ───────────────────────────────────────────────
+
+function AgentFailureMode({ modes }: { modes: string[] }) {
+  if (modes.length === 0) return null;
+  return (
+    <div>
+      <SectionLabel>Agent Failure Mode</SectionLabel>
+      <div className="rounded-xl p-4 flex flex-col gap-2.5"
+           style={{ background: 'rgba(239,68,68,0.04)', border: '1px solid rgba(239,68,68,0.12)' }}>
+        <p className="text-xs mb-0.5" style={{ color: 'rgba(239,68,68,0.6)' }}>
+          A cautious, conservative agent processing this email would likely:
+        </p>
+        {modes.map((mode, i) => (
+          <div key={i} className="flex items-start gap-2.5">
+            <span className="text-xs font-mono flex-shrink-0 mt-0.5" style={{ color: '#f87171' }}>✕</span>
+            <span className="text-xs leading-relaxed" style={{ color: 'rgba(248,250,252,0.6)' }}>
+              {mode}
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 // ─── Reasoning trace ──────────────────────────────────────────────────────────
 
 const EFFECT_STYLE = {
@@ -424,6 +549,188 @@ function ReasoningTrace({ entries }: { entries: AnalysisResult['reasoning'] }) {
   );
 }
 
+// ─── Classification decision section ─────────────────────────────────────────
+
+function ClassificationDecision({ result }: { result: AnalysisResult }) {
+  const { strongestEvidence, decisionReason, contradictions } = result;
+  if (decisionReason.length === 0 && strongestEvidence.length === 0) return null;
+
+  return (
+    <>
+      <SectionLabel>Classification Decision</SectionLabel>
+      <div className="rounded-xl overflow-hidden"
+           style={{ border: '1px solid rgba(255,255,255,0.07)' }}>
+
+        {/* Strongest evidence chips */}
+        {strongestEvidence.length > 0 && (
+          <div className="px-4 py-3"
+               style={{ borderBottom: decisionReason.length > 0 ? '1px solid rgba(255,255,255,0.05)' : 'none' }}>
+            <p className="text-xs mb-2" style={{ color: 'rgba(255,255,255,0.25)' }}>Top signals</p>
+            <div className="flex flex-wrap gap-1.5">
+              {strongestEvidence.map((s, i) => (
+                <span key={i} className="text-xs font-mono px-2 py-0.5 rounded"
+                      style={{ background: 'rgba(167,139,250,0.1)', color: '#c4b5fd' }}>
+                  {s}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Decision reasoning lines */}
+        {decisionReason.length > 0 && (
+          <div className="px-4 py-3 flex flex-col gap-2">
+            {decisionReason.map((line, i) => (
+              <div key={i} className="flex items-start gap-2.5">
+                <span className="text-xs flex-shrink-0 mt-0.5 font-mono"
+                      style={{ color: 'rgba(255,255,255,0.2)' }}>{i + 1}.</span>
+                <span className="text-xs leading-relaxed"
+                      style={{ color: 'rgba(248,250,252,0.55)' }}>{line}</span>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Contradictions (if any) */}
+        {contradictions.length > 0 && (
+          <div className="px-4 py-2.5 flex flex-wrap gap-1.5"
+               style={{ borderTop: '1px solid rgba(255,255,255,0.05)', background: 'rgba(239,68,68,0.03)' }}>
+            <span className="text-xs mr-1" style={{ color: 'rgba(244,63,94,0.5)' }}>Contradictions:</span>
+            {contradictions.map((c, i) => (
+              <span key={i} className="text-xs font-mono px-2 py-0.5 rounded"
+                    style={{ background: 'rgba(244,63,94,0.08)', color: '#f87171' }}>
+                {c}
+              </span>
+            ))}
+          </div>
+        )}
+      </div>
+    </>
+  );
+}
+
+// ─── Profile relevance section ────────────────────────────────────────────────
+
+const PROFILE_META: Record<UserProfile, { label: string; icon: string; color: string }> = {
+  developer: { label: 'Developer',  icon: '⌨️', color: '#38bdf8' },
+  creator:   { label: 'Creator',    icon: '🎬', color: '#f472b6' },
+  marketer:  { label: 'Marketer',   icon: '📣', color: '#fb923c' },
+  founder:   { label: 'Founder',    icon: '🚀', color: '#a78bfa' },
+  operator:  { label: 'Operator',   icon: '🛠', color: '#34d399' },
+  finance:   { label: 'Finance',    icon: '💰', color: '#f59e0b' },
+  general:   { label: 'General',    icon: '👤', color: '#94a3b8' },
+};
+
+const PROFILE_ORDER: UserProfile[] = ['developer', 'creator', 'marketer', 'founder', 'operator', 'finance', 'general'];
+
+function ProfileBar({ profile, score, isBest }: { profile: UserProfile; score: number; isBest: boolean }) {
+  const meta = PROFILE_META[profile];
+  const barColor = isBest ? meta.color : 'rgba(255,255,255,0.18)';
+  const textColor = isBest ? meta.color : 'rgba(255,255,255,0.45)';
+
+  return (
+    <div className="flex items-center gap-3">
+      <span className="w-5 text-center flex-shrink-0 text-xs">{meta.icon}</span>
+      <span className="text-xs w-20 flex-shrink-0" style={{ color: textColor }}>{meta.label}</span>
+      <div className="flex-1 rounded-full overflow-hidden" style={{ height: 4, background: 'rgba(255,255,255,0.06)' }}>
+        <div
+          style={{
+            width: `${score}%`,
+            height: '100%',
+            background: barColor,
+            borderRadius: 999,
+            transition: 'width 0.6s cubic-bezier(0.4,0,0.2,1)',
+          }}
+        />
+      </div>
+      <span className="text-xs font-mono tabular-nums w-6 text-right flex-shrink-0"
+            style={{ color: textColor }}>
+        {score}
+      </span>
+    </div>
+  );
+}
+
+function ProfileAnalysisSection({ result }: { result: AnalysisResult }) {
+  const { profileAnalysis } = result;
+  const best = profileAnalysis.bestProfileMatch;
+  const bestMeta = PROFILE_META[best];
+
+  return (
+    <>
+      <SectionLabel>Profile Relevance</SectionLabel>
+      <div className="rounded-xl overflow-hidden"
+           style={{ border: '1px solid rgba(255,255,255,0.07)' }}>
+
+        {/* Best match banner */}
+        <div className="px-4 py-3 flex items-center gap-3"
+             style={{ background: 'rgba(255,255,255,0.03)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+          <span className="text-base">{bestMeta.icon}</span>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-xs font-semibold" style={{ color: bestMeta.color }}>
+                Best match: {bestMeta.label}
+              </span>
+              <span className="text-xs px-2 py-0.5 rounded-full font-mono"
+                    style={{ background: `${bestMeta.color}1a`, color: bestMeta.color }}>
+                {profileAnalysis.profileRelevance[best]} pts
+              </span>
+            </div>
+            <p className="text-xs mt-0.5 leading-relaxed"
+               style={{ color: 'rgba(248,250,252,0.4)' }}>
+              {profileAnalysis.bestMatchExplanation}
+            </p>
+          </div>
+        </div>
+
+        {/* Relevance bars */}
+        <div className="px-4 py-4 flex flex-col gap-3">
+          {PROFILE_ORDER.map(p => (
+            <ProfileBar
+              key={p}
+              profile={p}
+              score={profileAnalysis.profileRelevance[p]}
+              isBest={p === best}
+            />
+          ))}
+        </div>
+
+        {/* Final priority by profile */}
+        <div className="px-4 py-3 flex flex-col gap-2"
+             style={{ borderTop: '1px solid rgba(255,255,255,0.06)', background: 'rgba(0,0,0,0.15)' }}>
+          <p className="text-xs font-semibold uppercase tracking-widest mb-1"
+             style={{ color: 'rgba(255,255,255,0.25)' }}>
+            Final Priority by Profile
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {PROFILE_ORDER.map(p => {
+              const fp = profileAnalysis.finalPriorityByProfile[p];
+              const meta = PROFILE_META[p];
+              const priorityLabel =
+                fp >= 80 ? 'Critical' :
+                fp >= 60 ? 'High' :
+                fp >= 40 ? 'Medium' : 'Low';
+              const priorityColor =
+                fp >= 80 ? '#ef4444' :
+                fp >= 60 ? '#f97316' :
+                fp >= 40 ? '#f59e0b' : '#6b7280';
+              return (
+                <div key={p} className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg"
+                     style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
+                  <span className="text-xs">{meta.icon}</span>
+                  <span className="text-xs" style={{ color: 'rgba(255,255,255,0.4)' }}>{meta.label}</span>
+                  <span className="text-xs font-semibold" style={{ color: priorityColor }}>{priorityLabel}</span>
+                  <span className="text-xs font-mono tabular-nums" style={{ color: 'rgba(255,255,255,0.3)' }}>({fp})</span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
+
 // ─── Main result view ─────────────────────────────────────────────────────────
 
 function ResultView({ result }: { result: AnalysisResult }) {
@@ -459,6 +766,18 @@ function ResultView({ result }: { result: AnalysisResult }) {
       {/* ── Safe Action Score ── */}
       <Section delay={60}>
         <SafeActionBar score={result.safeActionScore} />
+      </Section>
+
+      {/* ── Link dependency warning (conditional) ── */}
+      {result.idealStructuredVersion.linkDependency && (
+        <Section delay={80}>
+          <LinkDependencyWarning />
+        </Section>
+      )}
+
+      {/* ── Classification decision ── */}
+      <Section delay={75}>
+        <ClassificationDecision result={result} />
       </Section>
 
       <div style={{ height: 1, background: 'rgba(255,255,255,0.06)' }} />
@@ -505,6 +824,13 @@ function ResultView({ result }: { result: AnalysisResult }) {
           </div>
         )}
       </Section>
+
+      {/* ── Agent failure mode ── */}
+      {result.failureModes.length > 0 && (
+        <Section delay={190}>
+          <AgentFailureMode modes={result.failureModes} />
+        </Section>
+      )}
 
       {/* ── Agent interpretation ── */}
       <Section delay={230}>
@@ -558,6 +884,13 @@ function ResultView({ result }: { result: AnalysisResult }) {
         <JsonViewer data={result.idealStructuredVersion} title="agent-payload.json" />
       </Section>
 
+      <div style={{ height: 1, background: 'rgba(255,255,255,0.06)' }} />
+
+      {/* ── Profile relevance ── */}
+      <Section delay={430}>
+        <ProfileAnalysisSection result={result} />
+      </Section>
+
       {/* ── Full analysis (collapsible) ── */}
       <Section delay={440}>
         <details>
@@ -573,6 +906,8 @@ function ResultView({ result }: { result: AnalysisResult }) {
                 availability:        result.availability,
                 confidence:          result.confidence,
                 intent:              result.intent,
+                sensitivity:         result.sensitivity,
+                externalDependency:  result.externalDependency,
                 alternatives:        result.alternatives,
                 agentReadinessScore: result.agentReadinessScore,
                 safeActionScore:     result.safeActionScore,

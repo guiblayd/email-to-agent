@@ -1,22 +1,21 @@
-import type { WeightedKeyword, EmailSubtype, Intent } from '../../types';
+import type { WeightedKeyword, EmailSubtype, EmailIntent } from '../../types';
 
 export type SubtypeSignals = Partial<Record<EmailSubtype, WeightedKeyword[]>>;
-export type IntentSignals  = Partial<Record<Intent, WeightedKeyword[]>>;
+export type IntentSignals  = Partial<Record<EmailIntent, WeightedKeyword[]>>;
 
 export interface Rules {
   /** Common words used for language detection */
   indicatorWords: string[];
 
   typeKeywords: {
-    event:         WeightedKeyword[];
-    course:        WeightedKeyword[];
-    content:       WeightedKeyword[];
-    promotion:     WeightedKeyword[];
-    newsletter:    WeightedKeyword[];
-    billing:       WeightedKeyword[];
-    alert:         WeightedKeyword[];
-    transaction:   WeightedKeyword[];
-    informational: WeightedKeyword[];
+    event:       WeightedKeyword[];
+    course:      WeightedKeyword[];
+    content:     WeightedKeyword[];
+    promotion:   WeightedKeyword[];
+    newsletter:  WeightedKeyword[];
+    billing:     WeightedKeyword[];
+    alert:       WeightedKeyword[];
+    transaction: WeightedKeyword[];
   };
 
   subtypeKeywords: SubtypeSignals;
@@ -44,4 +43,18 @@ export interface Rules {
 
   greetingPattern:  RegExp;
   signaturePattern: RegExp;
+
+  /**
+   * Phrases that strongly indicate the content is already accessible —
+   * no scheduling required. Used by the availability detection layer.
+   * Takes priority over detected times and dates.
+   */
+  onDemandPhrases:  string[];
+
+  /**
+   * Phrases that strongly indicate the content is time-bound —
+   * a live event, a session starting at a specific time.
+   * Used by the availability detection layer when on-demand phrases are absent.
+   */
+  scheduledPhrases: string[];
 }

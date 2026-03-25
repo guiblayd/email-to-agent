@@ -73,13 +73,6 @@ export const ptRules: Rules = {
       w('conta criada', 2), w('enviamos seu', 2),
       w('bem-vindo', 1),
     ],
-    informational: [
-      w('gostaríamos de informar', 3), w('é para informar', 3),
-      w('ficou disponível', 3), w('informação importante', 3),
-      w('vamos falar sobre', 2), w('principais configurações', 2),
-      w('melhores estratégias', 2), w('desde a instalação', 2),
-      w('atualização', 1), w('comunicado', 1), w('aviso', 1), w('lembrete', 1),
-    ],
   },
 
   subtypeKeywords: {
@@ -99,12 +92,12 @@ export const ptRules: Rules = {
       w('mentoria', 3), w('mentorado', 3),
       w('mentor', 2), w('coaching', 3), w('orientação personalizada', 2),
     ],
-    'course/workshop': [
-      w('workshop', 3), w('prático', 2), w('sessão prática', 2),
+    'course/training': [
+      w('treinamento', 3), w('workshop', 2), w('sessão prática', 2),
       w('laboratório', 2),
     ],
-    'course/bootcamp': [
-      w('bootcamp', 3), w('imersão', 3), w('intensivo', 2), w('programa completo', 2),
+    'course/cohort': [
+      w('bootcamp', 3), w('imersão', 3), w('intensivo', 2), w('turma', 2), w('coorte', 2),
     ],
     'course/recorded': [
       w('no seu ritmo', 3), w('disponível agora', 3), w('gravado', 3),
@@ -114,56 +107,88 @@ export const ptRules: Rules = {
       w('desconto', 3), w('cupom', 3), w('de graça', 3),
       w('economize', 2), w('% de desconto', 3),
     ],
-    'promotion/flash_sale': [
+    'promotion/limited_time': [
       w('só hoje', 3), w('por tempo limitado', 3), w('nas próximas 24h', 3),
       w('tempo limitado', 2), w('24 horas', 2),
     ],
-    'billing/reminder': [
+    'billing/payment_reminder': [
       w('lembrete de pagamento', 3), w('vence em breve', 3),
       w('próximo vencimento', 2), w('lembrete', 2),
     ],
-    'billing/overdue': [
+    'billing/failed_payment': [
       w('pagamento em atraso', 3), w('valor em aberto', 3),
-      w('último aviso', 3), w('cobrança pendente', 3),
+      w('último aviso', 3), w('cobrança pendente', 3), w('pagamento recusado', 3),
     ],
-    'billing/renewal': [
+    'billing/subscription_due': [
       w('renovação automática', 3), w('sua assinatura renova', 3),
       w('renovação da assinatura', 3), w('débito automático', 2),
+    ],
+    'billing/invoice': [
+      w('nota fiscal anexa', 3), w('sua nota fiscal', 3), w('número da nota', 3),
+      w('nota fiscal disponível', 3), w('visualize sua fatura', 3),
+      w('nota fiscal', 2), w('fatura', 2), w('comprovante', 2), w('boleto', 2),
+    ],
+    'content/video': [
+      w('novo vídeo', 3), w('assista este vídeo', 3), w('vídeo disponível', 3),
+      w('acabei de lançar', 2), w('assista agora', 2),
+      w('vídeo', 1),
+    ],
+    'content/article': [
+      w('novo artigo', 3), w('acabei de publicar', 3), w('leia este artigo', 2),
+      w('artigo', 1), w('publicado', 1),
+    ],
+    'content/tutorial': [
+      w('novo episódio', 2), w('passo a passo', 3), w('tutorial', 3),
+      w('como fazer', 2), w('guia prático', 2),
+    ],
+    'content/product_update': [
+      w('notas de versão', 3), w('atualização do produto', 3), w('nova versão', 3),
+      w('atualização da api', 3), w('changelog', 3), w('o que há de novo', 3),
+      w('api', 2), w('versão', 2), w('melhorias', 2), w('novo recurso', 2),
+    ],
+    'alert/policy_update': [
+      w('atualização da política', 3), w('atualização dos termos', 3),
+      w('atualização do serviço', 3), w('mudanças em', 2),
+      w('estamos atualizando', 2), w('migração', 2),
+    ],
+    'alert/system_update': [
+      w('manutenção do sistema', 3), w('manutenção programada', 3),
+      w('interrupção do serviço', 3), w('indisponibilidade', 3),
+      w('janela de manutenção', 2), w('instabilidade', 2),
     ],
   },
 
   intentSignals: {
-    invite: [
+    attend: [
       w('você está convidado', 3), w('participe', 3), w('junte-se a nós', 3),
       w('compareça', 2), w('venha', 2),
     ],
-    sell: [
-      w('compre agora', 3), w('adquira', 3), w('de graça', 3),
-      w('oferta', 2), w('desconto', 2), w('aproveite', 1),
+    review: [
+      w('compre agora', 2), w('adquira', 2), w('oferta', 2),
+      w('desconto', 2), w('aproveite', 1),
     ],
-    remind: [
-      w('não esqueça', 3), w('um lembrete', 3), w('último aviso', 3),
-      w('não perca', 2), w('lembrete', 2),
-    ],
-    charge: [
+    pay: [
       w('vencimento', 3), w('fatura', 3), w('boleto', 3),
       w('pague agora', 3), w('pagamento em atraso', 3),
     ],
-    inform: [
-      w('gostaríamos de informar', 3), w('é para informar', 3),
-      w('comunicamos', 2), w('informamos', 2), w('saiba que', 2),
+    read: [
+      w('gostaríamos de informar', 3), w('comunicamos', 2),
+      w('informamos', 2), w('saiba que', 2),
     ],
-    warn: [
-      w('aviso de segurança', 3), w('atividade suspeita', 3), w('comprometido', 3),
+    verify: [
+      w('aviso de segurança', 3), w('atividade suspeita', 3),
       w('alerta', 2), w('risco de segurança', 3),
     ],
     confirm: [
       w('pedido confirmado', 3), w('reserva confirmada', 3),
       w('confirmamos', 2), w('confirmado', 3), w('com sucesso', 2),
     ],
-    educate: [
-      w('você vai aprender', 3), w('você aprenderá', 3),
+    register: [
+      w('você vai aprender', 3), w('inscreva-se', 3),
       w('passo a passo', 2), w('aula', 2), w('aprenda', 2),
+    ],
+    download: [
+      w('baixe agora', 3), w('baixar', 2), w('fazer download', 3),
     ],
   },
 
@@ -221,4 +246,24 @@ export const ptRules: Rules = {
 
   greetingPattern:  /^(oi|olá|ola|fala|e aí|e ai|bom dia|boa tarde|boa noite|prezado|prezada|caro|cara|tudo bem|beleza|como vai)/im,
   signaturePattern: /\b(um abraço|abraços|atenciosamente|cordialmente|obrigado|obrigada|até mais|grande abraço|forte abraço|tchau|valeu|att)\b/i,
+
+  // ── Availability signals ──────────────────────────────────────────────────
+  // Frases que indicam que o conteúdo já está acessível (sem necessidade de agendamento).
+  onDemandPhrases: [
+    'já disponível', 'disponível agora', 'disponível para sempre',
+    'assista quando quiser', 'aula gravada', 'gravado', 'no youtube',
+    'vídeo disponível', 'acesse o vídeo', 'acesse o conteúdo',
+    'disponível a qualquer momento', 'replay disponível',
+    'assista a gravação', 'acesse a gravação',
+    'acabei de disponibilizar', 'acabei de lançar', 'acabei de publicar',
+    'disponível no canal', 'assista agora', 'acesse agora',
+  ],
+
+  // Frases que indicam que o conteúdo é em tempo real (precisa de agendamento).
+  scheduledPhrases: [
+    'ao vivo', 'transmissão ao vivo', 'ir ao vivo', 'começa às',
+    'inicia às', 'junte-se a nós às', 'acontece amanhã', 'hoje às',
+    'evento ao vivo', 'participe ao vivo', 'em tempo real',
+    'inscreva-se para participar ao vivo',
+  ],
 };

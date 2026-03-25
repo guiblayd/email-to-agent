@@ -289,6 +289,55 @@ export function parseEmail(text: string, today: Date = new Date()): ParsedData {
   );
   const wordCount = text.trim().split(/\s+/).filter(Boolean).length;
 
+  // ── Signal group detection (for profile-aware relevance) ──────────────────
+  const matchGroup = (terms: string[]) => terms.filter(t => lower.includes(t));
+
+  const signalGroups = {
+    technicalSignals: matchGroup([
+      'api', 'sdk', 'webhook', 'endpoint', 'integration', 'library', 'framework',
+      'repository', 'cli', 'terminal', 'script', 'deploy', 'deployment', 'pipeline',
+      'backend', 'frontend', 'fullstack', 'microservice', 'devops', 'ci/cd',
+      'docker', 'kubernetes', 'terraform', 'container', 'cluster',
+      'commit', 'pull request', 'branch', 'merge', 'release', 'changelog',
+      'oauth', 'jwt', 'token', 'authentication', 'authorization',
+      'database', 'query', 'schema', 'migration', 'payload',
+      'integração', 'autenticação', 'implantação', 'repositório',
+    ]),
+    creatorSignals: matchGroup([
+      'video', 'tutorial', 'youtube', 'podcast', 'episode', 'series',
+      'content creator', 'channel', 'subscriber', 'upload', 'stream', 'live stream',
+      'thumbnail', 'clip', 'reel', 'short', 'vlog', 'blog post',
+      'newsletter', 'article', 'write-up', 'edition', 'digest',
+      'criador', 'episódio', 'inscrever', 'publicação',
+    ]),
+    marketingSignals: matchGroup([
+      'campaign', 'conversion', 'funnel', 'analytics', 'seo', 'roi', 'ctr',
+      'open rate', 'click rate', 'audience', 'lead', 'drip', 'nurture',
+      'ab test', 'a/b test', 'landing page', 'cta', 'call to action',
+      'email marketing', 'automation', 'segmentation', 'engagement',
+      'campanha', 'conversão', 'análise', 'audiência', 'captação',
+    ]),
+    financeSignals: matchGroup([
+      'invoice', 'revenue', 'budget', 'expense', 'accounting', 'profit', 'loss',
+      'tax', 'audit', 'fiscal', 'billing', 'payment', 'refund', 'subscription',
+      'mrr', 'arr', 'churn', 'ltv', 'cash flow', 'balance', 'due date',
+      'receita', 'fatura', 'orçamento', 'despesa', 'contabilidade',
+    ]),
+    businessSignals: matchGroup([
+      'startup', 'founder', 'investor', 'funding', 'pitch', 'deck', 'venture',
+      'product market fit', 'traction', 'growth', 'scale', 'b2b', 'saas',
+      'customer', 'client', 'deal', 'partnership', 'contract', 'proposal',
+      'estratégia', 'crescimento', 'cliente', 'parceria', 'proposta',
+    ]),
+    operationsSignals: matchGroup([
+      'incident', 'outage', 'downtime', 'alert', 'monitoring', 'on-call',
+      'sla', 'uptime', 'status page', 'runbook', 'escalation', 'pagerduty',
+      'deploy failed', 'rollback', 'hotfix', 'maintenance', 'scheduled maintenance',
+      'service disruption', 'degraded', 'resolved', 'postmortem',
+      'incidente', 'manutenção', 'interrupção',
+    ]),
+  };
+
   return {
     rawText:         text,
     subject,
@@ -310,5 +359,6 @@ export function parseEmail(text: string, today: Date = new Date()): ParsedData {
     hasSignature,
     isFormatted,
     linksFound,
+    signalGroups,
   };
 }

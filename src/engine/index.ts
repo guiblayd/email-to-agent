@@ -3,6 +3,10 @@ import { classifyEmail }           from './classifier';
 import { resolveDecision }         from './decision';
 import { calculateScores }         from './scoring';
 import { generateRecommendations } from './recommendations';
+import { computeRelevanceScore }   from './relevance';
+import { computeProfileRelevance } from './profiles';
+import { inferSensitivity }        from './sensitivity';
+import { inferExternalDependency } from './externalDependency';
 import type { AnalysisResult }     from '../types';
 
 /**
@@ -11,12 +15,12 @@ import type { AnalysisResult }     from '../types';
  * Pipeline:
  *   parseEmail → classifyEmail → resolveDecision → calculateScores → generateRecommendations
  *
- * resolveDecision is the new structured context layer. It determines availability
+ * resolveDecision is the structured context layer. It determines availability
  * and what is required (date, time, link policy) based on type × availability —
  * not hardcoded per-field exceptions. scoring.ts consumes that context exclusively.
  *
- * To upgrade from heuristics to AI: replace the timeout + synchronous pipeline
- * with an async API call that returns a ClassificationResult-shaped payload.
+ * To upgrade from heuristics to real AI: replace the timeout + synchronous
+ * pipeline with an async API call returning a ClassificationResult-shaped payload.
  */
 export async function analyzeEmail(text: string): Promise<AnalysisResult> {
   await new Promise(resolve => setTimeout(resolve, 900 + Math.random() * 700));
@@ -25,11 +29,18 @@ export async function analyzeEmail(text: string): Promise<AnalysisResult> {
   const classified = classifyEmail(parsed);
   const context    = resolveDecision(parsed, classified);
 
-  const { agentReadinessScore, safeActionScore, scoreBreakdown, reasoning, issues, priority, urgency } =
-    calculateScores(parsed, classified, context);
+  const { relevanceScore } = computeRelevanceScore(parsed.rawText);
+
+  const { agentReadinessScore, safeActionScore, scoreBreakdown, reasoning, issues, failureModes,
+          priority, urgency, intrinsicScore, priorityScore } =
+    calculateScores(parsed, classified, context, relevanceScore);
+
+  const profileAnalysis = computeProfileRelevance(parsed.signalGroups, intrinsicScore);
+  const sensitivity        = inferSensitivity(classified.type, classified.subtype, parsed);
+  const externalDependency = inferExternalDependency(classified.type, classified.subtype, parsed);
 
   const { agentInterpretation, idealHumanVersion, idealStructuredVersion } =
-    generateRecommendations(parsed, classified, agentReadinessScore, priority, urgency);
+    generateRecommendations(parsed, classified, priority, urgency, sensitivity, externalDependency);
 
   return {
     emailType:              classified.type,
@@ -38,6 +49,8 @@ export async function analyzeEmail(text: string): Promise<AnalysisResult> {
     confidence:             classified.confidence,
     alternatives:           classified.alternatives,
     intent:                 classified.intent,
+    sensitivity,
+    externalDependency,
     agentReadinessScore,
     safeActionScore,
     scoreBreakdown,
@@ -45,10 +58,18 @@ export async function analyzeEmail(text: string): Promise<AnalysisResult> {
     language:               parsed.language,
     priority,
     urgency,
-    detectedIssues:         issues,
+    intrinsicScore,
+    relevanceScore,
+    priorityScore,
+    strongestEvidence:      classified.strongestEvidence,
+    decisionReason:         classified.decisionReason,
+    contradictions:         classified.contradictions,
+    detectedIssues:         [...issues, ...classified.classificationNotes],
+    failureModes,
     agentInterpretation,
     idealHumanVersion,
     idealStructuredVersion,
+    profileAnalysis,
     detectedData: {
       dates:      parsed.normalizedDates,
       times:      parsed.normalizedTimes,
