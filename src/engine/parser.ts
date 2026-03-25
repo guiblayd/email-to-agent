@@ -1,7 +1,9 @@
-import type { ParsedData, NormalizedDate, NormalizedTime, Language, DateStatus } from '../types';
-import { detectLanguage } from './language';
-import { enRules, ptRules } from './rules';
-import type { Rules } from './rules';
+import type { ParsedData, NormalizedDate, NormalizedTime, Language, DateStatus, InputFidelity, CtaElement } from '../types';
+import { detectLanguage }      from './language';
+import { enRules, ptRules }    from './rules';
+import type { Rules }          from './rules';
+import { parseHtmlForCtas }    from './htmlParser';
+import { inferSuspectedCtas }  from './ctaInference';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -129,7 +131,7 @@ function extractMonthNameDates(text: string, rules: Rules, today: Date): Normali
 
 // ─── Main parser ──────────────────────────────────────────────────────────────
 
-export function parseEmail(text: string, today: Date = new Date()): ParsedData {
+export function parseEmail(text: string, today: Date = new Date(), htmlSource?: string): ParsedData {
   const lines = text.split('\n');
   const lower = text.toLowerCase();
 
@@ -248,6 +250,26 @@ export function parseEmail(text: string, today: Date = new Date()): ParsedData {
   );
   const timezone = tzMatch?.[0];
 
+  // ── Input fidelity & HTML parsing ────────────────────────────────────────
+  const hasHtmlAnchors = !!htmlSource && /<a[\s>]/i.test(htmlSource);
+  const inputFidelity: InputFidelity = hasHtmlAnchors
+    ? 'html_detected'
+    : /https?:\/\//.test(text)
+      ? 'partial_structure'
+      : 'plain_text_only';
+
+  let ctaElements: CtaElement[] = [];
+  let suspectedCtas: CtaElement[] = [];
+  let htmlLinkCount = 0;
+
+  if (hasHtmlAnchors) {
+    const htmlResult = parseHtmlForCtas(htmlSource!);
+    ctaElements   = htmlResult.ctaElements;
+    htmlLinkCount = htmlResult.linkCount;
+  } else {
+    suspectedCtas = inferSuspectedCtas(text);
+  }
+
   // ── CTA detection ─────────────────────────────────────────────────────────
   let textCTAFound = false;
   let ctaText: string | undefined;
@@ -261,9 +283,9 @@ export function parseEmail(text: string, today: Date = new Date()): ParsedData {
   }
 
   const hasLinks = /https?:\/\/\S+/.test(text);
-  const hasCTA = textCTAFound || hasLinks;
-  const hasLinkOnlyCTA = !textCTAFound && hasLinks;
-  if (!textCTAFound && hasLinks) ctaText = 'link';
+  const hasCTA = textCTAFound || hasLinks || ctaElements.length > 0 || suspectedCtas.length > 0;
+  const hasLinkOnlyCTA = !textCTAFound && (hasLinks || ctaElements.some(c => c.kind === 'link'));
+  if (!textCTAFound && (hasLinks || ctaElements.length > 0)) ctaText = 'link';
 
   // ── Urgency & ambiguity ───────────────────────────────────────────────────
   const urgencyKeywords: string[] = [];
@@ -277,7 +299,9 @@ export function parseEmail(text: string, today: Date = new Date()): ParsedData {
   }
 
   // ── Links ─────────────────────────────────────────────────────────────────
-  const linksFound = (text.match(/https?:\/\/[^\s\])"'>]+/g) ?? []).length;
+  const linksFound = hasHtmlAnchors
+    ? htmlLinkCount
+    : (text.match(/https?:\/\/[^\s\])"'>]+/g) ?? []).length;
 
   // ── Structural features ───────────────────────────────────────────────────
   const hasGreeting  = rules.greetingPattern.test(body);
@@ -360,5 +384,8 @@ export function parseEmail(text: string, today: Date = new Date()): ParsedData {
     isFormatted,
     linksFound,
     signalGroups,
+    inputFidelity,
+    ctaElements,
+    suspectedCtas,
   };
 }

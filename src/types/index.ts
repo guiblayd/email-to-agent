@@ -23,10 +23,21 @@ export type EmailType =
   | 'newsletter'
   | 'unknown';
 
-export type Priority    = 'low' | 'medium' | 'high' | 'critical';
-export type Urgency     = 'low' | 'medium' | 'high' | 'critical';
-export type Language    = 'pt' | 'en';
-export type Availability = 'scheduled' | 'on_demand' | 'ongoing' | 'none';
+export type Priority       = 'low' | 'medium' | 'high' | 'critical';
+export type Urgency        = 'low' | 'medium' | 'high' | 'critical';
+export type Language       = 'pt' | 'en';
+export type Availability   = 'scheduled' | 'on_demand' | 'ongoing' | 'none';
+export type InputFidelity  = 'html_detected' | 'partial_structure' | 'plain_text_only';
+
+export interface CtaElement {
+  /** Visible label text of the button or link. */
+  label:    string;
+  /** `button` / `link` — from parsed HTML. `possible_button` / `possible_link` — inferred from plain text. */
+  kind:     'button' | 'link' | 'possible_button' | 'possible_link';
+  /** Original href if available (null when lost in plain-text paste). */
+  href:     string | null;
+  priority: 'primary' | 'secondary';
+}
 export type DateStatus  = 'exact' | 'relative' | 'inferred' | 'ambiguous';
 
 export type EmailIntent =
@@ -230,6 +241,12 @@ export interface ParsedData {
   isFormatted:     boolean;
   linksFound:      number;
   signalGroups:    DetectedSignalGroups;
+  /** How faithfully the pasted text preserves the original email's HTML structure. */
+  inputFidelity:   InputFidelity;
+  /** CTA elements extracted from HTML (empty when only plain text is available). */
+  ctaElements:     CtaElement[];
+  /** Probable CTA lines detected by heuristics in plain text (empty when HTML is available). */
+  suspectedCtas:   CtaElement[];
 }
 
 export interface IdealStructuredVersion {
@@ -262,6 +279,9 @@ export interface AnalysisResult {
   intent:                 EmailIntent;
   sensitivity:            Sensitivity;
   externalDependency:     ExternalDependency;
+  inputFidelity:          InputFidelity;
+  ctaElements:            CtaElement[];
+  suspectedCtas:          CtaElement[];
   agentReadinessScore:    number;
   safeActionScore:        number;
   scoreBreakdown:         ScoreBreakdown;

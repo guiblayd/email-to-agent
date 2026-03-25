@@ -73,7 +73,12 @@ export function inferExternalDependency(
     return SUBTYPE_DEPENDENCY[subtype]!;
   }
 
-  // 3. Structural: link-only CTA with no inline content → link_required
+  // 3. Plain-text paste with suspected CTAs but no visible links → links were likely lost
+  if (data.inputFidelity === 'plain_text_only' && data.suspectedCtas.length > 0 && data.linksFound === 0) {
+    return 'link_required';
+  }
+
+  // 4. Structural: link-only CTA with no inline content → link_required
   if (data.hasLinkOnlyCTA && !data.hasCTA) return 'link_required';
 
   // 4. Links present — classify based on type context

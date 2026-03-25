@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { AnalysisResult, EmailType, Priority, Urgency, Language, EmailIntent, Availability, UserProfile, Sensitivity, ExternalDependency } from '../types';
+import type { AnalysisResult, EmailType, Priority, Urgency, Language, EmailIntent, Availability, UserProfile, Sensitivity, ExternalDependency, InputFidelity } from '../types';
 import { ScoreRing } from './ScoreRing';
 import { ScoreBreakdownPanel } from './ScoreBreakdownPanel';
 import { JsonViewer } from './JsonViewer';
@@ -111,6 +111,12 @@ const EXT_DEP_META: Record<ExternalDependency, { label: string; color: string; b
   link_required:       { label: 'Link required',        color: '#fb923c', bg: 'rgba(251,146,60,0.12)'  },
   attachment_optional: { label: 'Attachment optional',  color: '#818cf8', bg: 'rgba(129,140,248,0.1)'  },
   attachment_required: { label: 'Attachment required',  color: '#a78bfa', bg: 'rgba(167,139,250,0.12)' },
+};
+
+const FIDELITY_META: Record<InputFidelity, { label: string; color: string; bg: string; title: string }> = {
+  html_detected:     { label: 'HTML parsed',  color: '#34d399', bg: 'rgba(52,211,153,0.1)',  title: 'Full HTML captured — buttons and links are accurate' },
+  partial_structure: { label: 'Partial HTML', color: '#f59e0b', bg: 'rgba(245,158,11,0.1)',  title: 'Some structure detected; href targets may be missing' },
+  plain_text_only:   { label: 'Plain text',   color: '#f97316', bg: 'rgba(249,115,22,0.1)',  title: 'HTML lost — links and buttons may be missing' },
 };
 
 const INTENT_META: Record<EmailIntent, { label: string; icon: string; color: string }> = {
@@ -472,6 +478,80 @@ function LinkDependencyWarning() {
   );
 }
 
+// ─── Plain-text fidelity warning ─────────────────────────────────────────────
+
+function PlainTextWarning({ count }: { count: number }) {
+  return (
+    <div className="rounded-xl px-4 py-3 flex items-start gap-3"
+         style={{ background: 'rgba(249,115,22,0.06)', border: '1px solid rgba(249,115,22,0.15)' }}>
+      <span className="text-sm flex-shrink-0" style={{ color: '#fb923c' }}>⚠</span>
+      <div>
+        <p className="text-xs font-semibold mb-0.5" style={{ color: '#fb923c' }}>
+          Links may be missing
+        </p>
+        <p className="text-xs leading-relaxed" style={{ color: 'rgba(251,146,60,0.7)' }}>
+          {count} probable CTA{count > 1 ? 's' : ''} detected in plain text, but href targets were lost during paste.
+          For accurate link extraction, paste the original HTML email.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+// ─── CTA elements section ─────────────────────────────────────────────────────
+
+function CtaElementsSection({ result }: { result: AnalysisResult }) {
+  const { ctaElements, suspectedCtas, inputFidelity } = result;
+  if (ctaElements.length === 0 && suspectedCtas.length === 0) return null;
+
+  const fidelity = FIDELITY_META[inputFidelity];
+  const allCtas  = [...ctaElements, ...suspectedCtas];
+
+  return (
+    <details>
+      <summary className="flex items-center gap-2 text-xs cursor-pointer select-none font-medium"
+               style={{ color: 'rgba(255,255,255,0.3)' }}>
+        CTA elements
+        <span className="text-xs font-medium px-1.5 py-0.5 rounded-full"
+              style={{ background: fidelity.bg, color: fidelity.color }}>
+          {fidelity.label}
+        </span>
+      </summary>
+      <div className="mt-3 rounded-xl overflow-hidden"
+           style={{ border: '1px solid rgba(255,255,255,0.06)' }}>
+        {allCtas.map((cta, i) => {
+          const inferred = cta.kind === 'possible_button' || cta.kind === 'possible_link';
+          return (
+            <div key={i} className="px-4 py-2.5 flex items-start gap-3"
+                 style={{
+                   borderBottom: i < allCtas.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none',
+                   background: inferred ? 'rgba(249,115,22,0.03)' : 'transparent',
+                 }}>
+              <span className="text-xs font-mono flex-shrink-0 mt-0.5 w-[88px] text-right"
+                    style={{ color: inferred ? 'rgba(249,115,22,0.55)' : cta.kind === 'button' ? '#a78bfa' : '#38bdf8' }}>
+                {cta.kind}
+              </span>
+              <div className="flex-1 min-w-0">
+                <span className="text-xs font-medium" style={{ color: inferred ? 'rgba(248,250,252,0.5)' : 'rgba(248,250,252,0.8)' }}>
+                  {cta.label}
+                </span>
+                {cta.href
+                  ? <p className="text-xs font-mono mt-0.5 break-all" style={{ color: 'rgba(255,255,255,0.3)' }}>{cta.href}</p>
+                  : inferred && <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.2)' }}>href lost</p>
+                }
+              </div>
+              <span className="text-xs flex-shrink-0 mt-0.5"
+                    style={{ color: cta.priority === 'primary' ? '#fbbf24' : 'rgba(255,255,255,0.2)' }}>
+                {cta.priority}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+    </details>
+  );
+}
+
 // ─── Agent failure mode section ───────────────────────────────────────────────
 
 function AgentFailureMode({ modes }: { modes: string[] }) {
@@ -757,6 +837,11 @@ function ResultView({ result }: { result: AnalysisResult }) {
               </span>
               <Badge {...priorityMeta} label={`${priorityMeta.label} priority`} />
               <Badge {...urgencyMeta} />
+              <span className="text-xs font-medium px-2.5 py-1 rounded-full"
+                    title={FIDELITY_META[result.inputFidelity].title}
+                    style={{ background: FIDELITY_META[result.inputFidelity].bg, color: FIDELITY_META[result.inputFidelity].color }}>
+                {FIDELITY_META[result.inputFidelity].label}
+              </span>
             </div>
           </div>
           <ScoreRing score={result.agentReadinessScore} />
@@ -772,6 +857,13 @@ function ResultView({ result }: { result: AnalysisResult }) {
       {result.idealStructuredVersion.linkDependency && (
         <Section delay={80}>
           <LinkDependencyWarning />
+        </Section>
+      )}
+
+      {/* ── Plain-text fidelity warning ── */}
+      {result.inputFidelity === 'plain_text_only' && result.suspectedCtas.length > 0 && (
+        <Section delay={85}>
+          <PlainTextWarning count={result.suspectedCtas.length} />
         </Section>
       )}
 
@@ -793,6 +885,11 @@ function ResultView({ result }: { result: AnalysisResult }) {
       {/* ── Detected data (collapsible) ── */}
       <Section delay={110}>
         <DetectedDataSection result={result} />
+      </Section>
+
+      {/* ── CTA elements (collapsible) ── */}
+      <Section delay={120}>
+        <CtaElementsSection result={result} />
       </Section>
 
       {/* ── Reasoning trace (collapsible) ── */}

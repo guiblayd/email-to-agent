@@ -6,6 +6,7 @@ import type { AnalysisResult } from './types';
 
 export default function App() {
   const [emailText, setEmailText] = useState('');
+  const [htmlSource, setHtmlSource] = useState<string | undefined>(undefined);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [result, setResult] = useState<AnalysisResult | null>(null);
 
@@ -14,7 +15,7 @@ export default function App() {
     setIsAnalyzing(true);
     setResult(null);
     try {
-      const analysis = await analyzeEmail(emailText);
+      const analysis = await analyzeEmail(emailText, htmlSource);
       setResult(analysis);
     } finally {
       setIsAnalyzing(false);
@@ -75,9 +76,10 @@ export default function App() {
             />
             <EmailInput
               value={emailText}
-              onChange={v => { setEmailText(v); if (result) setResult(null); }}
+              onChange={v => { setEmailText(v); setHtmlSource(undefined); if (result) setResult(null); }}
               onAnalyze={handleAnalyze}
               isAnalyzing={isAnalyzing}
+              onPasteHtml={setHtmlSource}
             />
           </div>
 

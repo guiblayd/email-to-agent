@@ -22,10 +22,10 @@ import type { AnalysisResult }     from '../types';
  * To upgrade from heuristics to real AI: replace the timeout + synchronous
  * pipeline with an async API call returning a ClassificationResult-shaped payload.
  */
-export async function analyzeEmail(text: string): Promise<AnalysisResult> {
+export async function analyzeEmail(text: string, htmlSource?: string): Promise<AnalysisResult> {
   await new Promise(resolve => setTimeout(resolve, 900 + Math.random() * 700));
 
-  const parsed     = parseEmail(text);
+  const parsed     = parseEmail(text, new Date(), htmlSource);
   const classified = classifyEmail(parsed);
   const context    = resolveDecision(parsed, classified);
 
@@ -51,6 +51,9 @@ export async function analyzeEmail(text: string): Promise<AnalysisResult> {
     intent:                 classified.intent,
     sensitivity,
     externalDependency,
+    inputFidelity:          parsed.inputFidelity,
+    ctaElements:            parsed.ctaElements,
+    suspectedCtas:          parsed.suspectedCtas,
     agentReadinessScore,
     safeActionScore,
     scoreBreakdown,

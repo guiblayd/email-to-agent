@@ -6,10 +6,16 @@ interface EmailInputProps {
   onChange: (v: string) => void;
   onAnalyze: () => void;
   isAnalyzing: boolean;
+  onPasteHtml?: (html: string) => void;
 }
 
-export function EmailInput({ value, onChange, onAnalyze, isAnalyzing }: EmailInputProps) {
+export function EmailInput({ value, onChange, onAnalyze, isAnalyzing, onPasteHtml }: EmailInputProps) {
   const [showExamples, setShowExamples] = useState(false);
+
+  const handlePaste = (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
+    const html = e.clipboardData.getData('text/html');
+    if (html && onPasteHtml) onPasteHtml(html);
+  };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
@@ -79,6 +85,7 @@ export function EmailInput({ value, onChange, onAnalyze, isAnalyzing }: EmailInp
           <textarea
             value={value}
             onChange={e => onChange(e.target.value)}
+            onPaste={handlePaste}
             onKeyDown={handleKeyDown}
             placeholder={`Paste your email here...\n\nTry pasting a meeting invite, a promo email, an alert, or any message you send regularly.\n\nPress ⌘↵ to analyze.`}
             className="w-full h-full min-h-[280px] resize-none bg-transparent text-sm leading-relaxed p-4 font-mono focus:outline-none transition-all"
