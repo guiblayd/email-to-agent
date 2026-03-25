@@ -1,5 +1,8 @@
 # AgentMail AI
 
+<img width="1905" height="863" alt="image" src="https://github.com/user-attachments/assets/ff00cba0-e61f-4ad4-b2af-bb1ca2c46b4c" />
+
+
 **A deterministic email analysis engine that evaluates how well an email can be understood and acted on by an AI agent.**
 
 No LLMs. No external APIs. No machine learning.
