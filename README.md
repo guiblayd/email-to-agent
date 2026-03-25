@@ -441,7 +441,3 @@ For new test cases, add them to [`src/engine/__tests__/classifier.test.ts`](src/
 7. **Safety over completeness** — a cautious agent that declines is better than one that acts incorrectly
 
 ---
-
-## License
-
-MIT
